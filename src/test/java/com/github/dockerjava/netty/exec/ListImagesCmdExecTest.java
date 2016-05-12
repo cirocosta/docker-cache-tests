@@ -1,5 +1,20 @@
 package com.github.dockerjava.netty.exec;
 
+import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.exception.DockerException;
+import com.github.dockerjava.api.model.Image;
+import com.github.dockerjava.api.model.Info;
+import com.github.dockerjava.netty.AbstractNettyDockerClientTest;
+import org.testng.ITestResult;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
+
+import java.lang.reflect.Method;
+import java.util.List;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.emptyArray;
 import static org.hamcrest.Matchers.equalTo;
@@ -8,22 +23,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.isEmptyString;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.notNullValue;
-
-import java.lang.reflect.Method;
-import java.util.List;
-
-import org.testng.ITestResult;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
-
-import com.github.dockerjava.api.command.CreateContainerResponse;
-import com.github.dockerjava.api.exception.DockerException;
-import com.github.dockerjava.api.model.Image;
-import com.github.dockerjava.api.model.Info;
-import com.github.dockerjava.netty.AbstractNettyDockerClientTest;
 
 @Test(groups = "integration")
 public class ListImagesCmdExecTest extends AbstractNettyDockerClientTest {
@@ -74,6 +73,19 @@ public class ListImagesCmdExecTest extends AbstractNettyDockerClientTest {
         Boolean imageInFilteredList = isImageInFilteredList(images, imageId);
         assertTrue(imageInFilteredList);
     }
+
+    @Test
+    public void listImagesWithNameFilter() throws DockerException {
+        String imageId = createDanglingImage();
+        dockerClient.tagImageCmd(imageId, "test_repository", "latest").exec();
+        List<Image> images = dockerClient.listImagesCmd().withImageNameFilter("test_repository:latest").exec();
+        assertThat(images, notNullValue());
+        LOG.info("Images List: {}", images);
+        assertThat(images.size(), is(equalTo(1)));
+        Boolean imageInFilteredList = isImageInFilteredList(images, imageId);
+        assertTrue(imageInFilteredList);
+    }
+
 
     private boolean isImageInFilteredList(List<Image> images, String expectedImageId) {
         for (Image image : images) {
