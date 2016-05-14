@@ -1,0 +1,9 @@
+version: '2'
+
+services:
+  server:
+    build: ./
+    container_name: server
+    ports:
+      - "8080:80"
+      - "1337:1337"
